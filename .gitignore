@@ -24,3 +24,5 @@ deploy/lambda-layer/*.zip
 # Not part of the student template
 CLAUDE.md
 generate_figures.py
+
+.DS_Store

@@ -1,0 +1,44 @@
+Step 3: Deploy Lambda (Zip):
+
+Verify command:
+# Test via CLI invoke (bypasses Function URL auth):
+aws lambda invoke --function-name lsc-knn-zip \
+    --cli-binary-format raw-in-base64-out \
+    --payload "$(python3 -c 'import json; q=json.load(open("loadtest/query.json")); print(json.dumps({"body": json.dumps(q)}))')" \
+    /tmp/out.json
+cat /tmp/out.json
+
+Results:
+{"statusCode": 200, "headers": {"Content-Type": "application/json", "X-Server-Time-Ms": "81.699", "X-Instance-Id": "2026/03/29/[$LATEST]5c40b0ff305a4ec0ae8e285c9ed11ea5", "X-Cold-Start": "true"}, "body": "{\"results\": [{\"index\": 35859, \"distance\": 12.001459121704102}, {\"index\": 24682, \"distance\": 12.059946060180664}, {\"index\": 35397, \"distance\": 12.487079620361328}, {\"index\": 20160, \"distance\": 12.489519119262695}, {\"index\": 30454, \"distance\": 12.499402046203613}], \"query_time_ms\": 81.699, \"instance_id\": \"2026/03/29/[$LATEST]5c40b0ff305a4ec0ae8e285c9ed11ea5\", \"cold_start\": true}"}
+
+----------------------------------------------------------------------
+Step 4: Deploy Lambda (Container):
+
+Verify command:
+aws lambda invoke --function-name lsc-knn-container \
+    --cli-binary-format raw-in-base64-out \
+    --payload "$(python3 -c 'import json; q=json.load(open("loadtest/query.json")); print(json.dumps({"body": json.dumps(q)}))')" \
+    /tmp/out.json
+[ec2-user@ip-172-31-79-172 lsc-lab4-aws-cloud-r2-monkeykinggggg]$ cat /tmp/out.json
+
+Results:
+{"statusCode": 200, "headers": {"Content-Type": "application/json", "X-Server-Time-Ms": "33.417", "X-Instance-Id": "2026/03/29/[$LATEST]09b59f24bfe041c6b343e9d82116721b", "X-Cold-Start": "false"}, "body": "{\"results\": [{\"index\": 35859, \"distance\": 12.001459121704102}, {\"index\": 24682, \"distance\": 12.059946060180664}, {\"index\": 35397, \"distance\": 12.487079620361328}, {\"index\": 20160, \"distance\": 12.489519119262695}, {\"index\": 30454, \"distance\": 12.499402046203613}], \"query_time_ms\": 33.417, \"instance_id\": \"2026/03/29/[$LATEST]09b59f24bfe041c6b343e9d82116721b\", \"cold_start\": false}"}
+
+----------------------------------------------------------------------
+Step 5: Deploy Fargate:
+
+Verify command:
+[ec2-user@ip-172-31-79-172 lsc-lab4-aws-cloud-r2-monke]
+curl -X POST -H "Content-Type: application/json" -d @loadtest/query.json     http://lsc-knn-alb-1997620144.us-east-1.elb.amazonaws.com/search
+
+Results:
+{"instance_id":"ip-172-31-16-150.ec2.internal","query_time_ms":23.732,"results":[{"distance":12.001459121704102,"index":35859},{"distance":12.059946060180664,"index":24682},{"distance":12.487079620361328,"index":35397},{"distance":12.489519119262695,"index":20160},{"distance":12.499402046203613,"index":30454}]}
+
+----------------------------------------------------------------------
+Step 6: Deploy EC2 App Instance:
+
+Verify command:
+[ec2-user@ip-172-31-79-172 lsc-lab4-aws-cloud-r2-monkeykinggggg]$ curl -X POST -H "Content-Type: application/json" -d @loadtest/query.json  http://100.28.218.148:8080/search
+
+Results:
+{"instance_id":"2aea0b780024","query_time_ms":25.302,"results":[{"distance":12.001459121704102,"index":35859},{"distance":12.059946060180664,"index":24682},{"distance":12.487079620361328,"index":35397},{"distance":12.489519119262695,"index":20160},{"distance":12.499402046203613,"index":30454}]}

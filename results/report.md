@@ -42,11 +42,71 @@ The result table for latencies for each environment is below:
 - The Lambda does not meet the p99 < 500ms SLO under burst for both: Container and Zip. To fulfill SLO, we would need to use Provisioned Concurrency for keeping specific biger amound of execution environmens "warm" all the time.
 
 ## Assignment 5
+Lambda charges $0.20 per 1 million requests and $0.0000166667 per GB-second
 ![w:700](./figures/pricing-screenshots/lambda_a.png)
-![w:700](./figures/pricing-screenshots/lambda_b.png)
 
-Fargate charges hourly for allocated vCPU and memory:
+Fargate charges hourly for allocated vCPU ($0.01341857) and memory ($0.00147346/GB):
 ![w:700](./figures/pricing-screenshots/fargate.png)
+We use: ECS Fargate (behind ALB)	0.5 vCPU / 1 GB. 
 
 EC2 on-demand pricing for t3.small in us-east-1: $0.0104/hour.
 ![w:700](./figures/pricing-screenshots/ec2.png)
+We use: t3.small (2 vCPU, 2 GB) with 20 GB storage. 
+
+Calculations for Lambda:
+```
+Hourly Idle Cost = $0
+Monthly Idle Cost = $0
+```
+Calculations for Fargate:
+```
+Hourly Idle Cost = 0.5*$0.01341857 + 1*$0.00147346/GB = $0.008182745/h
+Monthly Idle Cost = 30[dni] * 24[godzin] * $0.008182745/h = $5.8915764
+```
+Calculations for EC2:
+```
+Hourly Idle Cost = $0.0104/h = 
+Monthly Idle Cost = 30[dni] * 24[godzin] * $0.0104/h = $7.488
+```
+The Lambda environment has zero idle cost as you pay there for requests and compute time, not for just being.
+
+## Assignment 6
+Firstly let's calculate the total amount of monthly requests:
+```
+100 RPS*60*30*30[dni] = 5 400 000
+5 RPS*60*30*60*5.5*30[dni] = 2 970 000
+Total nmbr of req per month: 8 370 000
+```
+Lambda costs:  
+Using the p50 duration of 92.58ms (0.09258s) from the Lambda Zip c=10 test and 0.5 GB memory.
+```
+Monthly cost = (8 370 000 × $0.20/1M) + (GB-seconds/month × $0.0000166667)
+GB-seconds   = 8 370 000 requests × 0.09258 s × 0.5 GB
+So:
+Monthly cost = $8.133
+```
+
+Fargate Costs is just copy from previous calculations in Ass 5 so:
+```
+Monthly cost = $5.8915764
+```
+
+EC2 costs are also a copy from previous calculations:
+```
+Monthly cost = $7.488
+```
+
+Calculating the break-even point:  
+Monthly Fargate Cost is always $5.89 regardless of traffic.
+```
+Nmbr of Scnds in Month = 2592000
+Total Monthly Requests = RPS * 2592000
+
+Requests Cost = (RPS * 2592000 / 1000000) * $0.20 = RPS * 0.5184
+Compute Cost = (RPS * 2592000) * 0.09258s * 0.5 GB = RPS * 1.9958
+Monthly Cost = RPS * 0.5184 + RPS * 11974732 = Requests Cost+Compute Cost = RPS * 2.5142
+
+So:
+$5.89 = RPS * 2.5142 => RPS = 2.343 RPS
+```
+The break-even point is reached at an average traffic volume of approximately 2.34 RPS.

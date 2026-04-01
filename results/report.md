@@ -102,11 +102,16 @@ Monthly Fargate Cost is always $5.89 regardless of traffic.
 Nmbr of Scnds in Month = 2592000
 Total Monthly Requests = RPS * 2592000
 
-Requests Cost = (RPS * 2592000 / 1000000) * $0.20 = RPS * 0.5184
-Compute Cost = (RPS * 2592000) * 0.09258s * 0.5 GB = RPS * 1.9958
-Monthly Cost = RPS * 0.5184 + RPS * 11974732 = Requests Cost+Compute Cost = RPS * 2.5142
+Requests Cost = (RPS × 2 592 000 / 1 000 000) × $0.20 = RPS × $0.5184
+GB-seconds   = RPS × 2 592 000 × 0.09258s × 0.5 GB = RPS × 119 959.2
+Compute Cost = RPS × 119 959.2 × $0.0000166667 = RPS × $1.9993
+Total Lambda Cost = RPS × ($0.5184 + $1.9993) = RPS × $2.5177
+
 
 So:
 $5.89 = RPS * 2.5142 => RPS = 2.343 RPS
 ```
 The break-even point is reached at an average traffic volume of approximately 2.34 RPS.
+
+The plot showing the pricign comparison:
+![w:700](./figures/fig2_cost_vs_rps_mine.png)
